@@ -1,0 +1,22 @@
+# Archivo .env - NO SUBIR A GIT
+# Contiene la API key de Google Gemini
+
+.env
+*.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.vscode/
+.idea/
+*.log
+.DS_Store
+Thumbs.db
+*_optimized.jpg
+*.tmp

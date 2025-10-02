@@ -13,6 +13,7 @@ import re
 from gemini_api import GeminiAPI
 from image_processor import ImageProcessor
 from config import Config
+from simplex_solver import SimplexSolver
 
 class LinearProgrammingGUI:
     def __init__(self):
@@ -26,6 +27,8 @@ class LinearProgrammingGUI:
         self.gemini_api = None
         self.image_processor = ImageProcessor()
         self.current_image_path = None
+        self.simplex_solver = SimplexSolver()
+        self.current_problem_data = None  # Guardar datos del problema analizado
         
         self.setup_ui()
         self.check_api_key()
@@ -124,6 +127,56 @@ class LinearProgrammingGUI:
         toolbar_frame = ttk.Frame(graph_frame)
         toolbar_frame.grid(row=1, column=0, sticky=(tk.W, tk.E))
         self.toolbar = NavigationToolbar2Tk(self.graph_canvas, toolbar_frame)
+        
+        # Pestaña 4: Método Simplex
+        simplex_frame = ttk.Frame(notebook, padding="10")
+        notebook.add(simplex_frame, text="Método Simplex")
+        simplex_frame.columnconfigure(0, weight=1)
+        simplex_frame.rowconfigure(1, weight=1)
+        
+        # Frame superior con controles
+        simplex_controls = ttk.Frame(simplex_frame)
+        simplex_controls.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
+        
+        # Botón para ejecutar Simplex
+        self.simplex_btn = ttk.Button(simplex_controls, text="Resolver con Método Simplex", 
+                                      command=self.solve_simplex, state="disabled")
+        self.simplex_btn.pack(side=tk.LEFT, padx=5)
+        
+        # Label de estado
+        self.simplex_status_label = ttk.Label(simplex_controls, text="Carga y analiza una imagen primero")
+        self.simplex_status_label.pack(side=tk.LEFT, padx=10)
+        
+        # Frame con scroll para las tablas del Simplex
+        simplex_canvas_frame = ttk.Frame(simplex_frame)
+        simplex_canvas_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        simplex_canvas_frame.columnconfigure(0, weight=1)
+        simplex_canvas_frame.rowconfigure(0, weight=1)
+        
+        # Canvas con scrollbar
+        self.simplex_canvas = tk.Canvas(simplex_canvas_frame, bg='white')
+        simplex_scrollbar_y = ttk.Scrollbar(simplex_canvas_frame, orient="vertical", 
+                                           command=self.simplex_canvas.yview)
+        simplex_scrollbar_x = ttk.Scrollbar(simplex_canvas_frame, orient="horizontal",
+                                           command=self.simplex_canvas.xview)
+        
+        self.simplex_canvas.configure(yscrollcommand=simplex_scrollbar_y.set,
+                                     xscrollcommand=simplex_scrollbar_x.set)
+        
+        simplex_scrollbar_y.grid(row=0, column=1, sticky=(tk.N, tk.S))
+        simplex_scrollbar_x.grid(row=1, column=0, sticky=(tk.W, tk.E))
+        self.simplex_canvas.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        
+        # Frame interior para las tablas
+        self.simplex_content_frame = ttk.Frame(self.simplex_canvas)
+        self.simplex_canvas_window = self.simplex_canvas.create_window((0, 0), 
+                                                                       window=self.simplex_content_frame,
+                                                                       anchor='nw')
+        
+        # Configurar scroll region cuando cambie el tamaño
+        self.simplex_content_frame.bind('<Configure>', 
+                                       lambda e: self.simplex_canvas.configure(
+                                           scrollregion=self.simplex_canvas.bbox('all')))
         
         # Barra de progreso
         self.progress_frame = ttk.Frame(main_frame)
@@ -247,6 +300,17 @@ class LinearProgrammingGUI:
         """Mostrar resultado en el área de texto y generar gráfica"""
         self.result_text.delete(1.0, tk.END)
         self.result_text.insert(tk.END, response)
+        
+        # Extraer datos del problema para Simplex
+        self.current_problem_data = self._extract_graph_data(response)
+        
+        # Habilitar botón de Simplex si se extrajeron datos
+        if self.current_problem_data and self.current_problem_data.get('objective'):
+            self.simplex_btn.config(state="normal")
+            self.simplex_status_label.config(text="Listo para resolver con Simplex")
+        else:
+            self.simplex_btn.config(state="disabled")
+            self.simplex_status_label.config(text="No se pudieron extraer datos del problema")
         
         # Generar gráfica basada en la respuesta
         self._generate_graph(response)
@@ -796,6 +860,211 @@ class LinearProgrammingGUI:
                         bbox=dict(boxstyle='round,pad=0.5', facecolor='lightgray', alpha=0.8))
             self.ax.set_title("Gráfica del Método Gráfico")
             print(f"Error en gráfica inicial: {e}")
+    
+    def solve_simplex(self):
+        """Resolver problema usando método Simplex"""
+        if not self.current_problem_data:
+            messagebox.showerror("Error", "No hay datos del problema para resolver")
+            return
+        
+        # Ejecutar en hilo separado
+        threading.Thread(target=self._solve_simplex_thread, daemon=True).start()
+    
+    def _solve_simplex_thread(self):
+        """Hilo para resolver con Simplex"""
+        try:
+            self.root.after(0, self._update_progress, True, "Resolviendo con Simplex...")
+            self.root.after(0, lambda: self.simplex_status_label.config(text="Resolviendo..."))
+            
+            # Obtener función objetivo y restricciones
+            objective = self.current_problem_data.get('objective', '')
+            restrictions = self.current_problem_data.get('restrictions', [])
+            
+            if not objective or not restrictions:
+                self.root.after(0, self._show_error, "Datos del problema incompletos")
+                return
+            
+            # Resolver con Simplex
+            result = self.simplex_solver.solve_from_text(objective, restrictions)
+            
+            # Mostrar resultado
+            self.root.after(0, self._display_simplex_result, result)
+            
+        except Exception as e:
+            self.root.after(0, self._show_error, f"Error en Simplex: {str(e)}")
+        finally:
+            self.root.after(0, self._update_progress, False, "Listo")
+    
+    def _display_simplex_result(self, result):
+        """Mostrar resultado del método Simplex"""
+        # Limpiar contenido anterior
+        for widget in self.simplex_content_frame.winfo_children():
+            widget.destroy()
+        
+        if result['status'] == 'error':
+            error_label = ttk.Label(self.simplex_content_frame, 
+                                   text=f"Error: {result['message']}", 
+                                   foreground='red', font=('Arial', 12, 'bold'))
+            error_label.pack(pady=20)
+            self.simplex_status_label.config(text="Error al resolver")
+            return
+        
+        if result['status'] == 'unbounded':
+            error_label = ttk.Label(self.simplex_content_frame,
+                                   text=result['message'],
+                                   foreground='orange', font=('Arial', 12, 'bold'))
+            error_label.pack(pady=20)
+            self.simplex_status_label.config(text="Problema no acotado")
+            return
+        
+        # Mostrar solución óptima
+        if result['status'] == 'optimal':
+            solution_frame = ttk.LabelFrame(self.simplex_content_frame, 
+                                           text="SOLUCIÓN ÓPTIMA", 
+                                           padding="15")
+            solution_frame.pack(fill=tk.X, padx=10, pady=10)
+            
+            # Valor óptimo
+            value_label = ttk.Label(solution_frame, 
+                                   text=f"Valor Óptimo: Z = {result['optimal_value']:.4f}",
+                                   font=('Arial', 14, 'bold'),
+                                   foreground='darkgreen')
+            value_label.pack(anchor=tk.W, pady=5)
+            
+            # Variables
+            vars_text = "Variables: "
+            for i, (var_name, val) in enumerate(zip(result['variable_names'], result['solution'])):
+                vars_text += f"{var_name} = {val:.4f}"
+                if i < len(result['variable_names']) - 1:
+                    vars_text += ", "
+            
+            vars_label = ttk.Label(solution_frame, 
+                                  text=vars_text,
+                                  font=('Arial', 12))
+            vars_label.pack(anchor=tk.W, pady=5)
+            
+            self.simplex_status_label.config(text="Solución óptima encontrada")
+        
+        # Mostrar iteraciones
+        iterations = result.get('iterations', [])
+        if iterations:
+            iterations_label = ttk.Label(self.simplex_content_frame,
+                                        text=f"Total de iteraciones: {len(iterations) - 1}",
+                                        font=('Arial', 12, 'bold'))
+            iterations_label.pack(pady=10)
+            
+            # Mostrar cada iteración
+            for iter_data in iterations:
+                self._create_iteration_table(iter_data)
+        
+        # Actualizar scroll region
+        self.simplex_content_frame.update_idletasks()
+        self.simplex_canvas.configure(scrollregion=self.simplex_canvas.bbox('all'))
+    
+    def _create_iteration_table(self, iter_data):
+        """Crear tabla para una iteración del Simplex"""
+        iteration_num = iter_data['iteration']
+        
+        # Frame para esta iteración
+        iter_frame = ttk.LabelFrame(self.simplex_content_frame,
+                                   padding="10")
+        iter_frame.pack(fill=tk.X, padx=10, pady=10)
+        
+        # Título
+        if iteration_num == 0:
+            title = "TABLA INICIAL"
+            title_color = 'blue'
+        elif iter_data.get('is_optimal', False):
+            title = f"ITERACIÓN {iteration_num} - SOLUCIÓN ÓPTIMA"
+            title_color = 'darkgreen'
+        else:
+            title = f"ITERACIÓN {iteration_num}"
+            title_color = 'black'
+        
+        title_label = ttk.Label(iter_frame, text=title, 
+                               font=('Arial', 12, 'bold'),
+                               foreground=title_color)
+        title_label.pack(anchor=tk.W, pady=(0, 5))
+        
+        # Información de pivote
+        if iter_data['pivot_row'] >= 0 and iter_data['pivot_col'] >= 0:
+            pivot_col_name = iter_data['col_names'][iter_data['pivot_col']]
+            pivot_row_name = iter_data['row_names'][iter_data['pivot_row']]
+            pivot_val = iter_data['tableau'][iter_data['pivot_row'], iter_data['pivot_col']]
+            
+            pivot_info = f"Columna Pivote: {pivot_col_name} | Fila Pivote: {pivot_row_name} | Elemento Pivote: {pivot_val:.4f}"
+            pivot_label = ttk.Label(iter_frame, text=pivot_info,
+                                   font=('Arial', 10),
+                                   foreground='darkred')
+            pivot_label.pack(anchor=tk.W, pady=(0, 10))
+        
+        # Crear tabla
+        table_frame = tk.Frame(iter_frame, relief=tk.SOLID, borderwidth=1)
+        table_frame.pack(fill=tk.BOTH, expand=True)
+        
+        tableau = iter_data['tableau']
+        col_names = iter_data['col_names']
+        row_names = iter_data['row_names']
+        pivot_row = iter_data['pivot_row']
+        pivot_col = iter_data['pivot_col']
+        
+        # Encabezado - columna vacía para nombres de fila
+        header_cell = tk.Label(table_frame, text="Base", 
+                              font=('Arial', 10, 'bold'),
+                              relief=tk.RIDGE, borderwidth=1,
+                              bg='lightgray', width=8)
+        header_cell.grid(row=0, column=0, sticky='nsew')
+        
+        # Encabezados de columna
+        for j, col_name in enumerate(col_names):
+            bg_color = 'yellow' if j == pivot_col and pivot_col >= 0 else 'lightgray'
+            header_cell = tk.Label(table_frame, text=col_name,
+                                  font=('Arial', 10, 'bold'),
+                                  relief=tk.RIDGE, borderwidth=1,
+                                  bg=bg_color, width=10)
+            header_cell.grid(row=0, column=j+1, sticky='nsew')
+        
+        # Filas de datos
+        n_rows, n_cols = tableau.shape
+        
+        for i in range(n_rows):
+            # Nombre de fila
+            bg_color = 'lightblue' if i == pivot_row and pivot_row >= 0 else 'lightgray'
+            row_label = tk.Label(table_frame, text=row_names[i],
+                               font=('Arial', 10, 'bold'),
+                               relief=tk.RIDGE, borderwidth=1,
+                               bg=bg_color, width=8)
+            row_label.grid(row=i+1, column=0, sticky='nsew')
+            
+            # Valores
+            for j in range(n_cols):
+                value = tableau[i, j]
+                
+                # Determinar color de fondo
+                bg_color = 'white'
+                fg_color = 'black'
+                font_weight = 'normal'
+                
+                # Resaltar elemento pivote
+                if i == pivot_row and j == pivot_col and pivot_row >= 0 and pivot_col >= 0:
+                    bg_color = 'red'
+                    fg_color = 'white'
+                    font_weight = 'bold'
+                # Resaltar columna pivote
+                elif j == pivot_col and pivot_col >= 0 and i != n_rows - 1:
+                    bg_color = 'lightyellow'
+                # Resaltar fila pivote
+                elif i == pivot_row and pivot_row >= 0:
+                    bg_color = 'lightcyan'
+                # Fila Z
+                elif i == n_rows - 1:
+                    bg_color = 'lavender'
+                
+                cell = tk.Label(table_frame, text=f"{value:.4f}",
+                              font=('Arial', 9, font_weight),
+                              relief=tk.RIDGE, borderwidth=1,
+                              bg=bg_color, fg=fg_color, width=10)
+                cell.grid(row=i+1, column=j+1, sticky='nsew')
     
     def run(self):
         """Ejecutar la aplicación"""

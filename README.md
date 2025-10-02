@@ -1,195 +1,297 @@
-# Resolvedor de Programación Lineal con IA
+# 🎯 Resolvedor de Programación Lineal con IA y Método Simplex
 
-Una aplicación con interfaz gráfica que utiliza la API de Google Gemini para resolver problemas de programación lineal mediante el método gráfico a partir de imágenes.
+Sistema completo para resolver problemas de programación lineal utilizando:
+- 🤖 **Inteligencia Artificial (Gemini)** para extraer problemas de imágenes
+- 📊 **Método Gráfico** para visualización en 2D
+- 🔢 **Método Simplex** para resolución algorítmica paso a paso ⭐ **NUEVO**
 
-## 📋 Características
+## 🎯 Características Principales
 
-- **Análisis de imágenes**: Carga imágenes de problemas de programación lineal
-- **IA integrada**: Utiliza Google Gemini 2.0 Flash para análisis automático
-- **Método gráfico**: Resuelve problemas paso a paso usando el método gráfico
-- **Interfaz amigable**: GUI desarrollada con tkinter
-- **Soporte múltiple**: Acepta formatos PNG, JPG, JPEG, GIF, BMP
-- **Optimización automática**: Redimensiona imágenes grandes automáticamente
+### 1. Análisis con IA
+- Carga imágenes con problemas de programación lineal escritos a mano o impresos
+- Extracción automática de función objetivo y restricciones usando Gemini AI
+- Formato de salida estructurado para procesamiento automático
 
-## 🚀 Instalación
+### 2. Método Gráfico
+- Visualización de restricciones como líneas en el plano
+- Región factible resaltada en color
+- Identificación automática de vértices
+- Punto óptimo marcado claramente
 
-### Prerrequisitos
+### 3. Método Simplex ⭐ **NUEVO**
+- Resolución paso a paso del problema
+- Visualización de todas las iteraciones en tablas
+- Resaltado de elementos pivote:
+  - 🔴 **Rojo**: Elemento pivote
+  - 🟡 **Amarillo**: Columna pivote
+  - 🔵 **Azul**: Fila pivote
+  - 🟣 **Lavanda**: Fila Z
+- Solución óptima con valores detallados
 
-- Python 3.11 o superior
-- Una API key de Google Gemini (gratuita en [Google AI Studio](https://makersuite.google.com/app/apikey))
+⚠️ **NOTA**: El método Simplex solo soporta problemas de **MAXIMIZACIÓN**
 
-### Pasos de instalación
+## 📦 Instalación
 
-1. **Clonar o descargar el proyecto**
-   ```bash
-   cd "c:\Users\USUARIO\OneDrive\Documentos\opti\lab IA"
-   ```
+### Requisitos
+- Python 3.8 o superior
+- pip (gestor de paquetes de Python)
+
+### Pasos
+
+1. **Clonar o descargar el repositorio**
+```bash
+git clone <url-del-repositorio>
+cd Optimization-Solver-with-Graphic-Method-And-AI
+```
 
 2. **Instalar dependencias**
-   ```bash
-   pip install -r requirements.txt
+```bash
+pip install -r requirements.txt
+```
+
+3. **Configurar API Key de Gemini**
+   
+   Opción A: Crear archivo `.env` en la raíz del proyecto:
    ```
+   GEMINI_API_KEY=tu_api_key_aqui
+   ```
+   
+   Opción B: Ingresar la API key desde la interfaz gráfica al iniciar
 
-3. **Obtener API Key de Gemini**
+   Para obtener una API key de Gemini:
    - Ve a [Google AI Studio](https://makersuite.google.com/app/apikey)
-   - Crea una cuenta si no la tienes
-   - Genera una nueva API key
-   - Copia la API key
+   - Inicia sesión con tu cuenta de Google
+   - Crea una nueva API key
 
-## 🎯 Uso
+## 🚀 Uso
 
 ### Ejecutar la aplicación
-
 ```bash
 python main.py
 ```
 
-### Pasos para usar
+### Flujo de trabajo
 
-1. **Configurar API Key**
-   - Al abrir la aplicación, ingresa tu API key de Gemini en el campo correspondiente
-   - Haz clic en "Guardar" (la API key se guarda de forma segura)
+1. **Pestaña "Imagen del Problema"**
+   - Clic en "Cargar Imagen"
+   - Selecciona una imagen con el problema de programación lineal
 
-2. **Cargar imagen**
-   - Haz clic en "Cargar Imagen"
-   - Selecciona una imagen que contenga un problema de programación lineal
-   - La imagen debe mostrar claramente:
-     - Función objetivo
-     - Variables de decisión
-     - Restricciones
-     - Condiciones de no negatividad
+2. **Pestaña "Análisis y Solución"**
+   - Clic en "Analizar Problema"
+   - Espera a que la IA procese la imagen
+   - Revisa el análisis completo del problema
 
-3. **Analizar problema**
-   - Haz clic en "Analizar Problema"
-   - Espera mientras la IA procesa la imagen
-   - Los resultados aparecerán en el panel derecho
+3. **Pestaña "Gráfica del Método"**
+   - Visualiza automáticamente el método gráfico
+   - Observa restricciones, región factible y punto óptimo
 
-### Ejemplo de imagen válida
+4. **Pestaña "Método Simplex"** ⭐ **NUEVO**
+   - Clic en "Resolver con Método Simplex"
+   - Revisa cada iteración del algoritmo
+   - Observa el tableau inicial y todas las transformaciones
+   - Identifica columnas y filas pivote en cada paso
+   - Consulta la solución óptima al final
 
-La imagen debe contener un problema como:
-
-```
-Maximizar: Z = 3x + 2y
-
-Sujeto a:
-x + y ≤ 4
-2x + y ≤ 6
-x ≥ 0, y ≥ 0
-```
-
-## 📁 Estructura del proyecto
+## 📁 Estructura del Proyecto
 
 ```
-lab IA/
-├── main.py              # Interfaz gráfica principal
-├── gemini_api.py        # Manejo de la API de Gemini
-├── image_processor.py   # Procesamiento de imágenes
-├── config.py           # Configuración y almacenamiento de API key
-├── requirements.txt    # Dependencias del proyecto
-└── README.md          # Este archivo
+├── main.py                      # Interfaz gráfica principal
+├── simplex_solver.py           # ⭐ Implementación del método Simplex
+├── gemini_api.py               # Integración con Gemini AI
+├── image_processor.py          # Procesamiento de imágenes
+├── config.py                   # Gestión de configuración
+├── test_simplex.py            # ⭐ Pruebas del solver Simplex
+├── requirements.txt            # Dependencias
+├── README.md                   # Este archivo
+├── SIMPLEX_DOCUMENTATION.md    # ⭐ Documentación detallada del Simplex
+└── .env                        # Configuración (crear manualmente)
 ```
 
-## 🔧 Configuración avanzada
+## 🧪 Ejecutar Pruebas
 
-### Formatos de imagen soportados
-- PNG (recomendado para texto claro)
-- JPEG/JPG
-- GIF
-- BMP
-- WEBP
+Para verificar que el método Simplex funciona correctamente:
 
-### Limitaciones técnicas
-- Tamaño máximo de imagen: 5MB
-- Dimensiones máximas recomendadas: 1920x1080
-- La imagen debe tener texto legible
-
-### Personalización
-
-Puedes modificar la configuración editando `config.py`:
-
-- **Tamaño máximo de imagen**: Modifica `max_file_size` en `ImageProcessor`
-- **Prompt de IA**: Edita el prompt en `gemini_api.py` para ajustar el análisis
-- **Formatos soportados**: Añade más formatos en `supported_formats`
-
-## 🐛 Solución de problemas
-
-### Error: "Import could not be resolved"
 ```bash
-# Asegúrate de que estás en el directorio correcto
-cd "c:\Users\USUARIO\OneDrive\Documentos\opti\lab IA"
-# Verifica que todas las dependencias estén instaladas
-pip install -r requirements.txt
+python test_simplex.py
 ```
 
-### Error: "Error HTTP 403"
-- Verifica que tu API key de Gemini sea válida
-- Asegúrate de que la API key tenga permisos para usar Gemini 2.0 Flash
+Esto ejecutará múltiples casos de prueba y mostrará los resultados detallados.
 
-### Error: "El archivo es demasiado grande"
-- Reduce el tamaño de la imagen
-- Usa una herramienta de compresión de imágenes
-- Convierte a formato PNG o JPEG
+## 📖 Formato de Problemas
 
-### Error: "No se puede analizar la imagen"
-- Verifica que la imagen contenga texto claro y legible
-- Asegúrate de que el problema esté completo (función objetivo, restricciones)
-- Usa imágenes con buena resolución y contraste
-
-## 📚 Ejemplo completo
-
-### 1. Prepara tu imagen
-Crea o toma una foto de un problema como:
-
+### Función Objetivo
 ```
-Problema: Una empresa produce dos tipos de productos A y B.
-
-Maximizar: Utilidad = 5A + 3B
-
-Restricciones:
-- Tiempo de máquina: 2A + B ≤ 100
-- Materia prima: A + 2B ≤ 80
-- Demanda A: A ≤ 40
-- No negatividad: A ≥ 0, B ≥ 0
-
-Resolver usando método gráfico.
+Maximizar Z = c1*x1 + c2*x2
 ```
 
-### 2. Resultado esperado
-La IA debería proporcionar:
-- Identificación de variables (A, B)
-- Función objetivo: Max Z = 5A + 3B
-- Lista de restricciones
-- Procedimiento del método gráfico paso a paso
-- Vértices de la región factible
-- Evaluación de la función objetivo en cada vértice
-- Solución óptima con interpretación
+### Restricciones
+```
+a1*x1 + a2*x2 <= b
+x1 >= 0
+x2 >= 0
+```
 
-## 🤝 Contribuir
+### Ejemplo Completo
+```
+Maximizar Z = 3x1 + 2x2
+Sujeto a:
+  2x1 + 1x2 <= 10
+  1x1 + 1x2 <= 6
+  x1 <= 4
+  x1, x2 >= 0
+```
 
-Si encuentras errores o quieres mejorar la aplicación:
+## 🎨 Capturas de Pantalla
 
-1. Reporta issues describiendo el problema
-2. Propón mejoras en la funcionalidad
-3. Comparte ejemplos de problemas que no se resuelven correctamente
+### Ventana Principal
+La interfaz tiene 4 pestañas:
+1. Imagen del Problema
+2. Análisis y Solución
+3. Gráfica del Método
+4. Método Simplex ⭐
+
+### Método Simplex (Iteraciones)
+Cada iteración muestra:
+- Tableau completo con valores numéricos
+- Variables básicas en cada fila
+- Columna pivote resaltada en amarillo
+- Fila pivote resaltada en azul
+- Elemento pivote resaltado en rojo
+- Información del pivote actual
+
+## ⚙️ Configuración Avanzada
+
+### Archivo .env
+```env
+GEMINI_API_KEY=tu_api_key_aqui
+```
+
+### Configuración de Ventana
+La geometría de la ventana se guarda automáticamente en:
+```
+~/.linear_programming_solver_config.json
+```
+
+## 🔧 Solución de Problemas
+
+### El botón de Simplex está deshabilitado
+- Asegúrate de analizar una imagen primero
+- Verifica que la IA extrajo correctamente los datos
+- El problema debe ser de maximización
+
+### Error "Este solver solo soporta problemas de MAXIMIZACIÓN"
+- El método Simplex actual solo funciona con maximización
+- Usa solo problemas de maximización o convierte manualmente
+
+### La imagen no se analiza correctamente
+- Usa imágenes claras y legibles
+- Formatos soportados: PNG, JPG, JPEG, GIF, BMP
+- Tamaño máximo: 5MB
+
+### Error de API Key
+- Verifica que la API key sea correcta
+- Asegúrate de tener conexión a internet
+- Revisa el archivo .env o configura desde la interfaz
+
+## 🆕 Novedades (Versión con Simplex)
+
+### Agregado
+- ✅ Implementación completa del método Simplex
+- ✅ Interfaz gráfica para visualizar iteraciones
+- ✅ Resaltado de elementos pivote con colores
+- ✅ Mostrar tableau inicial y todas las transformaciones
+- ✅ Información detallada de cada iteración
+- ✅ Solución óptima con valores de variables
+- ✅ Suite de pruebas completa
+- ✅ Documentación detallada del Simplex
+
+### Características del Método Simplex
+- Algoritmo Simplex estándar
+- Solo maximización (por ahora)
+- Variables de holgura automáticas
+- Detección de solución óptima
+- Detección de problemas no acotados
+- Scroll para ver todas las iteraciones
+
+## 🚧 Limitaciones Conocidas
+
+1. **Método Simplex**: Solo maximización (no minimización)
+2. **Variables**: Problemas con 2 variables (x1, x2)
+3. **Restricciones**: Solo operador <= (menor o igual)
+4. **Idioma**: Interfaz en español
+5. **Formato**: La IA debe extraer correctamente el formato
+
+## 📚 Documentación Adicional
+
+- **[SIMPLEX_DOCUMENTATION.md](SIMPLEX_DOCUMENTATION.md)**: Guía completa del método Simplex
+- **[2. Guía 2_ProgramaciónLineal_MétodoGráfico.pdf](2.%20Guía%202_ProgramaciónLineal_MétodoGráfico.pdf)**: Guía teórica (si existe)
+
+## 🔮 Mejoras Futuras
+
+- [ ] Soporte para minimización en Simplex
+- [ ] Problemas con más de 2 variables
+- [ ] Método de dos fases
+- [ ] Variables artificiales
+- [ ] Análisis de sensibilidad
+- [ ] Exportar resultados a PDF
+- [ ] Gráficas 3D para 3 variables
+- [ ] Modo de comparación entre métodos
+
+## 👨‍💻 Tecnologías Utilizadas
+
+- **Python 3.x**: Lenguaje principal
+- **Tkinter**: Interfaz gráfica
+- **Matplotlib**: Visualización de gráficas
+- **NumPy**: Cálculos numéricos y álgebra lineal
+- **Pillow (PIL)**: Procesamiento de imágenes
+- **Google Gemini AI**: Análisis de imágenes con IA
+- **python-dotenv**: Gestión de variables de entorno
 
 ## 📄 Licencia
 
-Este proyecto es de uso educativo y personal. La API de Gemini tiene sus propios términos de uso.
+Este proyecto es de código abierto para fines educativos.
 
-## ⚡ Comandos rápidos
+## 🤝 Contribuciones
 
-```bash
-# Instalar y ejecutar
-pip install -r requirements.txt
-python main.py
+Las contribuciones son bienvenidas. Por favor:
+1. Fork el proyecto
+2. Crea una rama para tu feature
+3. Commit tus cambios
+4. Push a la rama
+5. Abre un Pull Request
 
-# Verificar instalación
-python -c "import requests, PIL; print('Dependencias OK')"
+## 📞 Soporte
 
-# Limpiar archivos temporales (opcional)
-python -c "import os, glob; [os.remove(f) for f in glob.glob('*_optimized.jpg')]"
+Para problemas o preguntas:
+- Abre un issue en el repositorio
+- Consulta la documentación en SIMPLEX_DOCUMENTATION.md
+
+## 💡 Ejemplos de Uso
+
+### Ejemplo 1: Problema Simple
+```
+Maximizar Z = 3x1 + 2x2
+Sujeto a:
+  2x1 + 1x2 <= 10
+  1x1 + 1x2 <= 6
+  x1, x2 >= 0
+
+Solución óptima: x1 = 4, x2 = 2, Z = 16
+```
+
+### Ejemplo 2: Problema de Producción
+```
+Maximizar Z = 5x1 + 4x2
+Sujeto a:
+  6x1 + 4x2 <= 24
+  x1 + 2x2 <= 6
+  x1, x2 >= 0
+
+Solución óptima: x1 = 3, x2 = 1.5, Z = 21
 ```
 
 ---
 
-**Nota**: Asegúrate de tener una conexión a internet estable para usar la API de Gemini. La primera ejecución puede tomar más tiempo mientras se cargan las librerías.
+**⭐ Si este proyecto te fue útil, considera darle una estrella en GitHub**
+
+**🎓 Proyecto educativo para aprendizaje de Programación Lineal**
